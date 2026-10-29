@@ -1,0 +1,9 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: biblioteca
+    ports: ["3306:3306"]
+    volumes:
+      - ./dbf:/docker-entrypoint-initdb.d:ro
