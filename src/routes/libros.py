@@ -37,8 +37,8 @@ def listar(estado: Estado | None = None):
 
 
 @router.post("", status_code=201)
-def crear(b: LibroIn):
-    return libros.crear(b.model_dump())
+def crear(libro: LibroIn):
+    return libros.crear(libro.model_dump())
 
 
 @router.get("/{id}")
@@ -47,9 +47,9 @@ def obtener(id: int):
 
 
 @router.patch("/{id}")
-def editar(id: int, b: LibroPatch):
+def editar(id: int, libro: LibroPatch):
     or_404(libros.obtener(id))
-    return libros.editar(id, b.model_dump(exclude_unset=True))
+    return libros.editar(id, libro.model_dump(exclude_unset=True))
 
 
 @router.delete("/{id}", status_code=204)

@@ -22,13 +22,13 @@ def listar():
     return fetch("SELECT * FROM listas ORDER BY nombre")
 
 
-def crear(d):
-    id, _ = run("INSERT INTO listas (nombre, descripcion) VALUES (%s,%s)", (d["nombre"], d.get("descripcion")))
+def crear(data_dict):
+    id, _ = run("INSERT INTO listas (nombre, descripcion) VALUES (%s,%s)", (data_dict["nombre"], data_dict.get("descripcion")))
     return obtener(id)
 
 
-def editar(id, d):
-    campos = {k: v for k, v in d.items() if k in COLS}
+def editar(id, data_dict):
+    campos = {k: v for k, v in data_dict.items() if k in COLS}
     if campos:
         sets = ",".join(f"{k}=%s" for k in campos)
         run(f"UPDATE listas SET {sets} WHERE id=%s", [*campos.values(), id])
