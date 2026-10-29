@@ -1,3 +1,4 @@
+# Consume la API pública de Open Library (sin API key) para buscar libros.
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
@@ -15,6 +16,7 @@ def buscar(q: str = Query(min_length=2)):
         r.raise_for_status()
     except httpx.HTTPError:
         raise HTTPException(502, "Open Library no disponible")
+    # Se devuelve en el mismo formato que espera POST /libros
     return [
         {
             "ol_key": d["key"],

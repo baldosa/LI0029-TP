@@ -1,9 +1,11 @@
+# Acceso a MariaDB: una conexión por consulta (simple; alcanza para este TP).
 import os
 
 import mysql.connector
 
 
 def _conn():
+    # Los valores por defecto coinciden con docker-compose.yml
     return mysql.connector.connect(
         host=os.getenv("DB_HOST", "127.0.0.1"),
         port=int(os.getenv("DB_PORT", "3306")),
@@ -14,6 +16,7 @@ def _conn():
 
 
 def fetch(sql, params=()):
+    """Ejecuta un SELECT; devuelve una lista de dicts."""
     c = _conn()
     try:
         cur = c.cursor(dictionary=True)

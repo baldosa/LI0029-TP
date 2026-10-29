@@ -1,3 +1,4 @@
+# Controlador (MVC): endpoints de /libros. Pydantic valida la entrada (422 si es inválida).
 from typing import Literal
 
 from fastapi import APIRouter
@@ -20,6 +21,7 @@ class LibroIn(BaseModel):
     notas: str | None = None
 
 
+# Todos los campos opcionales: PATCH solo cambia los que se envían
 class LibroPatch(BaseModel):
     titulo: str | None = Field(None, min_length=1, max_length=255)
     autor: str | None = None

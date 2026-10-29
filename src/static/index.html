@@ -31,11 +31,14 @@
 <div id="listas" class="pure-form"></div>
 
 <script>
+// Vista (MVC): llama a la API propia con fetch y dibuja las tablas.
 const $ = id => document.getElementById(id);
+// Escapa HTML: títulos y autores vienen de una API externa
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 const ESTADOS = {por_leer: "por leer", leyendo: "leyendo", leido: "leído"};
 let found = [], misLibros = [];
 
+// Helper de fetch: muestra el error de la API en un alert y devuelve null
 async function api(url, method = "GET", body) {
   const r = await fetch(url, {method, headers: {"Content-Type": "application/json"}, body: body && JSON.stringify(body)});
   if (!r.ok) {
@@ -53,6 +56,7 @@ $("fb").onsubmit = async e => {
     `<tr><td>${esc(b.titulo)}</td><td>${esc(b.autor)}</td><td>${esc(b.anio)}</td>
       <td><button class="pure-button" data-save="${i}">Guardar</button></td></tr>`).join("");
 };
+// Los botones de las tablas se manejan por delegación, leyendo data-* del elemento clickeado
 $("res").onclick = async e => {
   const i = e.target.dataset.save;
   if (i !== undefined && await api("/libros", "POST", found[i])) cargar();

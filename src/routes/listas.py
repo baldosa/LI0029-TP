@@ -1,3 +1,4 @@
+# Controlador (MVC): endpoints de /listas y del vínculo lista-libro.
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 

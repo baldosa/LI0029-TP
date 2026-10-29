@@ -1,6 +1,8 @@
+# Modelo (MVC): consultas SQL de la tabla libros.
 from db import fetch, run
 
-COLS = ("titulo", "autor", "anio", "ol_key", "estado", "puntaje", "notas")
+# Columnas editables; también sirve de lista blanca en editar()
+COLS =("titulo", "autor", "anio", "ol_key", "estado", "puntaje", "notas")
 
 
 def obtener(id):
