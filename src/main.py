@@ -3,11 +3,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from mysql.connector import IntegrityError
 
-from routes import libros, listas
+from routes import libros, listas, openlibrary
 
 app = FastAPI(title="Biblioteca de lectura")
 app.include_router(libros.router)
 app.include_router(listas.router)
+app.include_router(openlibrary.router)
 
 
 @app.exception_handler(IntegrityError)
