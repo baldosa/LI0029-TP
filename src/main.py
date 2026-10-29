@@ -4,12 +4,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from mysql.connector import IntegrityError
 
-from routes import libros, listas, openlibrary
+from routes import libros, listas, buscar
 
 app = FastAPI(title="Biblioteca de lectura")
 app.include_router(libros.router)
 app.include_router(listas.router)
-app.include_router(openlibrary.router)
+app.include_router(buscar.router)
 
 
 # UNIQUE repetido (ol_key, nombre de lista) o clave foránea inválida -> 409 en vez de 500

@@ -1,4 +1,4 @@
-# Consume la API pública de Open Library (sin API key) para buscar libros.
+# Consume la API pública de Open Library para buscar libros.
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
