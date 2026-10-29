@@ -3,23 +3,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Biblioteca de lectura</title>
-<style>body{font:16px system-ui;max-width:800px;margin:1rem auto;padding:0 1rem}li{padding:.2rem 0}</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+<style>body{font-family:system-ui;max-width:800px;margin:1rem auto;padding:0 1rem}table{width:100%}</style>
 <h1>Biblioteca de lectura</h1>
 
 <h2>Buscar en Open Library</h2>
-<form id="fb"><input id="q" placeholder="título o autor" required minlength="2"> <button>Buscar</button></form>
-<ul id="res"></ul>
+<form id="fb" class="pure-form"><input id="q" placeholder="título o autor" required minlength="2"> <button class="pure-button pure-button-primary">Buscar</button></form>
+<table class="pure-table pure-table-horizontal">
+  <thead><tr><th>Título</th><th>Autor</th><th>Año</th><th></th></tr></thead>
+  <tbody id="res"></tbody>
+</table>
 
 <h2>Mis libros</h2>
-<select id="filtro">
-  <option value="">todos</option><option value="por_leer">por leer</option>
-  <option value="leyendo">leyendo</option><option value="leido">leído</option>
-</select>
-<ul id="libros"></ul>
+<form class="pure-form">
+  <select id="filtro">
+    <option value="">todos</option><option value="por_leer">por leer</option>
+    <option value="leyendo">leyendo</option><option value="leido">leído</option>
+  </select>
+</form>
+<table class="pure-table pure-table-horizontal">
+  <thead><tr><th>Título</th><th>Autor</th><th>Estado</th><th>Puntaje</th><th></th></tr></thead>
+  <tbody id="libros" class="pure-form"></tbody>
+</table>
 
 <h2>Listas</h2>
-<form id="fl"><input id="ln" placeholder="nombre de la lista" required> <button>Crear</button></form>
-<div id="listas"></div>
+<form id="fl" class="pure-form"><input id="ln" placeholder="nombre de la lista" required> <button class="pure-button pure-button-primary">Crear</button></form>
+<div id="listas" class="pure-form"></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -41,7 +50,8 @@ $("fb").onsubmit = async e => {
   e.preventDefault();
   found = await api("/buscar?q=" + encodeURIComponent($("q").value)) || [];
   $("res").innerHTML = found.map((b, i) =>
-    `<li>${esc(b.titulo)} — ${esc(b.autor)} (${esc(b.anio)}) <button data-save="${i}">Guardar</button></li>`).join("");
+    `<tr><td>${esc(b.titulo)}</td><td>${esc(b.autor)}</td><td>${esc(b.anio)}</td>
+      <td><button class="pure-button" data-save="${i}">Guardar</button></td></tr>`).join("");
 };
 $("res").onclick = async e => {
   const i = e.target.dataset.save;
@@ -51,12 +61,12 @@ $("res").onclick = async e => {
 async function cargar() {
   const f = $("filtro").value;
   misLibros = await api("/libros" + (f ? "?estado=" + f : "")) || [];
-  $("libros").innerHTML = misLibros.map(b => `<li>${esc(b.titulo)} — ${esc(b.autor)}
-    <select data-estado="${b.id}">${Object.entries(ESTADOS).map(([k, v]) =>
-      `<option value="${k}"${k === b.estado ? " selected" : ""}>${v}</option>`).join("")}</select>
-    <select data-puntaje="${b.id}"><option value="">★?</option>${[1, 2, 3, 4, 5].map(n =>
-      `<option${n === b.puntaje ? " selected" : ""}>${n}</option>`).join("")}</select>
-    <button data-del="${b.id}">Borrar</button></li>`).join("");
+  $("libros").innerHTML = misLibros.map(b => `<tr><td>${esc(b.titulo)}</td><td>${esc(b.autor)}</td>
+    <td><select data-estado="${b.id}">${Object.entries(ESTADOS).map(([k, v]) =>
+      `<option value="${k}"${k === b.estado ? " selected" : ""}>${v}</option>`).join("")}</select></td>
+    <td><select data-puntaje="${b.id}"><option value="">★?</option>${[1, 2, 3, 4, 5].map(n =>
+      `<option${n === b.puntaje ? " selected" : ""}>${n}</option>`).join("")}</select></td>
+    <td><button class="pure-button" data-del="${b.id}">Borrar</button></td></tr>`).join("");
   cargarListas();
 }
 $("filtro").onchange = cargar;
@@ -74,10 +84,15 @@ async function cargarListas() {
   const ls = await api("/listas") || [];
   const det = (await Promise.all(ls.map(l => api(`/listas/${l.id}`)))).filter(Boolean);
   $("listas").innerHTML = det.map(l => `<h3>${esc(l.nombre)}
-      <button data-rn="${l.id}">Renombrar</button> <button data-dl="${l.id}">Borrar lista</button></h3>
-    <ul>${l.libros.map(b => `<li>${esc(b.titulo)} <button data-q="${l.id}/${b.id}">Quitar</button></li>`).join("")}</ul>
-    <select data-add="${l.id}"><option value="">+ agregar libro…</option>${misLibros.map(b =>
-      `<option value="${b.id}">${esc(b.titulo)}</option>`).join("")}</select>`).join("");
+      <button class="pure-button" data-rn="${l.id}">Renombrar</button>
+      <button class="pure-button" data-dl="${l.id}">Borrar lista</button></h3>
+    <table class="pure-table pure-table-horizontal">
+      <thead><tr><th>Título</th><th>Autor</th><th></th></tr></thead>
+      <tbody>${l.libros.map(b => `<tr><td>${esc(b.titulo)}</td><td>${esc(b.autor)}</td>
+        <td><button class="pure-button" data-q="${l.id}/${b.id}">Quitar</button></td></tr>`).join("")}</tbody>
+    </table>
+    <p><select data-add="${l.id}"><option value="">+ agregar libro…</option>${misLibros.map(b =>
+      `<option value="${b.id}">${esc(b.titulo)}</option>`).join("")}</select></p>`).join("");
 }
 $("fl").onsubmit = async e => {
   e.preventDefault();
