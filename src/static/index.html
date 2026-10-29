@@ -1,1 +1,101 @@
-<!doctype html><title>Biblioteca</title>
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Biblioteca de lectura</title>
+<style>body{font:16px system-ui;max-width:800px;margin:1rem auto;padding:0 1rem}li{padding:.2rem 0}</style>
+<h1>Biblioteca de lectura</h1>
+
+<h2>Buscar en Open Library</h2>
+<form id="fb"><input id="q" placeholder="título o autor" required minlength="2"> <button>Buscar</button></form>
+<ul id="res"></ul>
+
+<h2>Mis libros</h2>
+<select id="filtro">
+  <option value="">todos</option><option value="por_leer">por leer</option>
+  <option value="leyendo">leyendo</option><option value="leido">leído</option>
+</select>
+<ul id="libros"></ul>
+
+<h2>Listas</h2>
+<form id="fl"><input id="ln" placeholder="nombre de la lista" required> <button>Crear</button></form>
+<div id="listas"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const ESTADOS = {por_leer: "por leer", leyendo: "leyendo", leido: "leído"};
+let found = [], misLibros = [];
+
+async function api(url, method = "GET", body) {
+  const r = await fetch(url, {method, headers: {"Content-Type": "application/json"}, body: body && JSON.stringify(body)});
+  if (!r.ok) {
+    const d = (await r.json()).detail;
+    alert(typeof d === "string" ? d : JSON.stringify(d));
+    return null;
+  }
+  return r.status === 204 ? true : r.json();
+}
+
+$("fb").onsubmit = async e => {
+  e.preventDefault();
+  found = await api("/buscar?q=" + encodeURIComponent($("q").value)) || [];
+  $("res").innerHTML = found.map((b, i) =>
+    `<li>${esc(b.titulo)} — ${esc(b.autor)} (${esc(b.anio)}) <button data-save="${i}">Guardar</button></li>`).join("");
+};
+$("res").onclick = async e => {
+  const i = e.target.dataset.save;
+  if (i !== undefined && await api("/libros", "POST", found[i])) cargar();
+};
+
+async function cargar() {
+  const f = $("filtro").value;
+  misLibros = await api("/libros" + (f ? "?estado=" + f : "")) || [];
+  $("libros").innerHTML = misLibros.map(b => `<li>${esc(b.titulo)} — ${esc(b.autor)}
+    <select data-estado="${b.id}">${Object.entries(ESTADOS).map(([k, v]) =>
+      `<option value="${k}"${k === b.estado ? " selected" : ""}>${v}</option>`).join("")}</select>
+    <select data-puntaje="${b.id}"><option value="">★?</option>${[1, 2, 3, 4, 5].map(n =>
+      `<option${n === b.puntaje ? " selected" : ""}>${n}</option>`).join("")}</select>
+    <button data-del="${b.id}">Borrar</button></li>`).join("");
+  cargarListas();
+}
+$("filtro").onchange = cargar;
+$("libros").onchange = async e => {
+  const d = e.target.dataset;
+  if (d.estado) await api(`/libros/${d.estado}`, "PATCH", {estado: e.target.value});
+  if (d.puntaje) await api(`/libros/${d.puntaje}`, "PATCH", {puntaje: +e.target.value || null});
+};
+$("libros").onclick = async e => {
+  const id = e.target.dataset.del;
+  if (id && confirm("¿Borrar libro?") && await api(`/libros/${id}`, "DELETE")) cargar();
+};
+
+async function cargarListas() {
+  const ls = await api("/listas") || [];
+  const det = (await Promise.all(ls.map(l => api(`/listas/${l.id}`)))).filter(Boolean);
+  $("listas").innerHTML = det.map(l => `<h3>${esc(l.nombre)}
+      <button data-rn="${l.id}">Renombrar</button> <button data-dl="${l.id}">Borrar lista</button></h3>
+    <ul>${l.libros.map(b => `<li>${esc(b.titulo)} <button data-q="${l.id}/${b.id}">Quitar</button></li>`).join("")}</ul>
+    <select data-add="${l.id}"><option value="">+ agregar libro…</option>${misLibros.map(b =>
+      `<option value="${b.id}">${esc(b.titulo)}</option>`).join("")}</select>`).join("");
+}
+$("fl").onsubmit = async e => {
+  e.preventDefault();
+  if (await api("/listas", "POST", {nombre: $("ln").value})) { $("ln").value = ""; cargarListas(); }
+};
+$("listas").onclick = async e => {
+  const d = e.target.dataset;
+  if (d.dl && confirm("¿Borrar lista?")) await api(`/listas/${d.dl}`, "DELETE");
+  else if (d.q) await api(`/listas/${d.q.split("/")[0]}/libros/${d.q.split("/")[1]}`, "DELETE");
+  else if (d.rn) { const n = prompt("Nuevo nombre"); if (n) await api(`/listas/${d.rn}`, "PATCH", {nombre: n}); }
+  else return;
+  cargarListas();
+};
+$("listas").onchange = async e => {
+  const d = e.target.dataset;
+  if (d.add && e.target.value) { await api(`/listas/${d.add}/libros/${e.target.value}`, "PUT"); cargarListas(); }
+};
+
+cargar();
+</script>
+</html>
